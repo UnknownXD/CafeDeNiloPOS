@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".CafeDeNilo.ActivityTicket">
+
+    <com.baoyz.swipemenulistview.SwipeMenuListView
+        android:id="@+id/lvItems"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:textAlignment="center"/>
+
+    <FrameLayout
+        android:id="@+id/btnCharge2"
+        android:layout_width="match_parent"
+        android:layout_height="85dp"
+        android:background="@color/colorPrimary"
+        android:clickable="true"
+        android:focusable="true"
+        android:layout_alignParentBottom="true"
+        android:foreground="?android:attr/selectableItemBackground">
+
+        <Button
+            android:id="@+id/btnCharge2a"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:background="@null"
+            android:textAllCaps="false"
+            android:drawablePadding="15dp"
+
+            android:gravity="center"
+            android:minHeight="0dp"
+            android:textSize="20sp"
+            android:minWidth="0dp"
+            android:text="Charge"
+            android:textColor="@android:color/white" />
+    </FrameLayout>
+
+</RelativeLayout>

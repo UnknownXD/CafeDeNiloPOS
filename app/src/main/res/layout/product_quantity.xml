@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical">
+
+    <RelativeLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent" android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true">
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:paddingLeft="4.0dip"
+            android:paddingTop="5.0dip"
+            android:paddingRight="4.0dip"
+            android:paddingBottom="1.0dip"
+            android:layout_width="fill_parent" android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/quantity"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:gravity="center"
+                android:text="Quantity"
+                android:layout_weight="1.0"
+                android:textSize="25sp"
+                />
+
+            <com.cepheuen.elegantnumberbutton.view.ElegantNumberButton xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:id="@+id/numbtn"
+                android:layout_width="107dp"
+                android:layout_height="wrap_content"
+                app:backGroundColor="@color/colorPrimary"
+                app:finalNumber="99"
+                app:initialNumber="1"
+                android:layout_weight="1.0"
+                app:textSize="10sp"></com.cepheuen.elegantnumberbutton.view.ElegantNumberButton>
+
+
+
+        </LinearLayout>
+    </RelativeLayout>
+
+
+
+
+</LinearLayout>
