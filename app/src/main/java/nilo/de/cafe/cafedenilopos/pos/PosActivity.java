@@ -1,5 +1,6 @@
 package nilo.de.cafe.cafedenilopos.pos;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -17,6 +18,8 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -29,14 +32,27 @@ import com.afollestad.materialdialogs.DialogAction;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.cepheuen.elegantnumberbutton.view.ElegantNumberButton;
 
+import org.angmarch.views.NiceSpinner;
+
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 import es.dmoral.toasty.Toasty;
+import nilo.de.cafe.cafedenilopos.API.APIService;
+import nilo.de.cafe.cafedenilopos.API.APIUrl;
 import nilo.de.cafe.cafedenilopos.CafeDeNilo.ActivityPayment;
 import nilo.de.cafe.cafedenilopos.CafeDeNilo.ActivityTicket;
 import nilo.de.cafe.cafedenilopos.R;
 import nilo.de.cafe.cafedenilopos.adapter.OrderAdapter;
+import nilo.de.cafe.cafedenilopos.models.ProductCategories;
+import nilo.de.cafe.cafedenilopos.models.ProductCategory;
 import nilo.de.cafe.cafedenilopos.models.Products;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 
 public class PosActivity extends AppCompatActivity implements MainContract.MainView {
@@ -52,8 +68,10 @@ public class PosActivity extends AppCompatActivity implements MainContract.MainV
     //Adapter
     double payment = 0.00;
     MaterialDialog dialog;
+    NiceSpinner niceSpinner;
+    ArrayList<String> spinneradapter = new ArrayList<>();
 
-    public  int count = 0;
+    public int count = 0;
     public static double sum = 0.00;
     public static ArrayList<String> listID = new ArrayList<>();
     public static ArrayList<String> listName = new ArrayList<>();
@@ -67,12 +85,15 @@ public class PosActivity extends AppCompatActivity implements MainContract.MainV
         setTitle("");
         initializeToolbarAndRecyclerView();
         initProgressBar();
+        spinneradapter.clear();
+        load();
 
         sum = 0.00;
         listName.clear();
         listID.clear();
         listPrice.clear();
         listQuantity.clear();
+        niceSpinner = (NiceSpinner) findViewById(R.id.spinner);
 
         ticketNum = (TextView) findViewById(R.id.ticketNum);
         btnTicket = (LinearLayout) findViewById(R.id.btnDan);
@@ -93,15 +114,33 @@ public class PosActivity extends AppCompatActivity implements MainContract.MainV
 
         btnTicket.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v)
-            {
+            public void onClick(View v) {
                 Intent intent = new Intent(PosActivity.this, ActivityTicket.class);
                 startActivity(intent);
             }
         });
 
-    }
+        niceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                Toasty.info(PosActivity.this, spinneradapter.get(position)+"", Toast.LENGTH_LONG).show();
+                if(spinneradapter.get(position).equals("All Products"))
+                {
+                    adapter.getSpinnerFilter().filter("");
+                }
 
+                else
+                {
+                    adapter.getSpinnerFilter().filter(spinneradapter.get(position));
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+    }
 
     @Override
     public void onBackPressed() {
@@ -123,7 +162,7 @@ public class PosActivity extends AppCompatActivity implements MainContract.MainV
 
     /**
      * Initializing progressbar programmatically
-     * */
+     */
     private void initProgressBar() {
         progressBar = new ProgressBar(this, null, android.R.attr.progressBarStyleLarge);
         progressBar.setIndeterminate(true);
@@ -141,12 +180,11 @@ public class PosActivity extends AppCompatActivity implements MainContract.MainV
 
     /**
      * RecyclerItem click event listener
-     * */
+     */
     private RecyclerItemClickListener recyclerItemClickListener = new RecyclerItemClickListener() {
         @Override
         public void onItemClick(final Products products) {
-            if(products.getAvailability().equals("available"))
-            {
+            if (products.getAvailability().equals("available")) {
                 boolean wrapInScrollView = true;
                 dialog = new MaterialDialog.Builder(PosActivity.this)
                         .title(products.getProduct_name())
@@ -162,31 +200,30 @@ public class PosActivity extends AppCompatActivity implements MainContract.MainV
                                 String i = numberButton.getNumber();
 
                                 count = Integer.parseInt(i) + count;
-                                ticketNum.setText(count+"");
+                                ticketNum.setText(count + "");
                                 //Toasty.success(PosActivity.this, ((products.getPrice()* .12)+products.getPrice())+"", Toasty.LENGTH_LONG).show();
 
-                                sum  = (Integer.parseInt(i) * (products.getPrice()*.12)+products.getPrice()) + sum ;
+                                sum = (Integer.parseInt(i) * (products.getPrice() * .12) + products.getPrice()) + sum;
                                 btnPayment.setText("Charge ₱" + sum);
 
-                                if(listName.contains(products.getProduct_name()))
-                                {
+                                if (listName.contains(products.getProduct_name())) {
                                     int y = listName.indexOf(products.getProduct_name());
-                                    double x = ((products.getPrice() + (products.getPrice() *.12)) * (Integer.parseInt (i))) + Double.parseDouble(listPrice.get(y));
+                                    double x = ((products.getPrice() + (products.getPrice() * .12)) * (Integer.parseInt(i))) + Double.parseDouble(listPrice.get(y));
                                     int z = (Integer.parseInt(listQuantity.get(y))) + (Integer.parseInt(i));
 
-                                    listPrice.set(y, (x+""));
-                                    listQuantity.set(y, (z+""));
-                                }
-
-                                else
-                                {
-                                    listID.add(products.getId()+"");
+                                    listPrice.set(y, (x + ""));
+                                    listQuantity.set(y, (z + ""));
+                                } else {
+                                    listID.add(products.getId() + "");
                                     //Toast.makeText(context, model.getQuan()+"", Toast.LENGTH_SHORT).show();
                                     listName.add(products.getProduct_name());
-                                    listPrice.add((Integer.parseInt(i) * (products.getPrice() + (products.getPrice() *.12))) + "");
+                                    listPrice.add((Integer.parseInt(i) * (products.getPrice() + (products.getPrice() * .12))) + "");
                                     listQuantity.add(i);
                                 }
                                 presenter.onRefreshButtonClick();
+                                spinneradapter.clear();
+                                load();
+                                btnPayment.setEnabled(true);
                             }
                         })
                         .onNeutral(new MaterialDialog.SingleButtonCallback() {
@@ -208,10 +245,8 @@ public class PosActivity extends AppCompatActivity implements MainContract.MainV
                             }
                         })
                         .show();
-            }
-            else
-            {
-                Toasty.error(PosActivity.this, "Product Unavailable!", Toasty.LENGTH_LONG,true).show();
+            } else {
+                Toasty.error(PosActivity.this, "Product Unavailable!", Toasty.LENGTH_LONG, true).show();
             }
 
         }
@@ -230,7 +265,7 @@ public class PosActivity extends AppCompatActivity implements MainContract.MainV
     @Override
     public void setDataToRecyclerView(ArrayList<Products> productsArrayList) {
 
-         adapter = new OrderAdapter(productsArrayList, recyclerItemClickListener);
+        adapter = new OrderAdapter(productsArrayList, recyclerItemClickListener);
         recyclerView.setAdapter(adapter);
 
     }
@@ -273,6 +308,39 @@ public class PosActivity extends AppCompatActivity implements MainContract.MainV
         return true;
     }
 
+    private void load() {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(APIUrl.BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        APIService service = retrofit.create(APIService.class);
+
+        Call<ProductCategories> call = service.getProductCategory();
+
+        call.enqueue(new Callback<ProductCategories>() {
+            @Override
+            public void onResponse(Call<ProductCategories> call, Response<ProductCategories> response) {
+
+                List<ProductCategory> users = response.body().getCategoryName();
+                ;
+                spinneradapter.add("All Products");
+                             String[] user = new String[users.size()];
+                             for(int i = 0; i <users.size(); i++)
+                             {
+                                 spinneradapter.add(users.get(i).getCategory_name());
+                                 //user[i] =
+                                 //Toast.makeText(PosActivity.this, users.get(i).getCategory_name()+"", Toast.LENGTH_SHORT).show();
+                             }
+                niceSpinner.attachDataSource(spinneradapter);
+                // List<ProductCategory> users = response.body().getCategoryName();
+                // Toast.makeText(PosActivity.this, +"", Toast.LENGTH_SHORT).show();
+            }
+            @Override
+            public void onFailure(Call<ProductCategories> call, Throwable t) {
+                Toast.makeText(PosActivity.this, t.getMessage(), Toast.LENGTH_SHORT).show();
+
+            }
+        });
+    }
 }
-
-

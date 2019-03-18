@@ -1,6 +1,7 @@
 package nilo.de.cafe.cafedenilopos.API;
 
 
+import nilo.de.cafe.cafedenilopos.models.ProductCategories;
 import nilo.de.cafe.cafedenilopos.models.ProductList;
 import nilo.de.cafe.cafedenilopos.models.Result;
 
@@ -16,6 +17,9 @@ public interface APIService {
     //Cafe Denilo
     @GET("products")
     Call<ProductList> getProducts();
+
+    @GET("productscategory")
+    Call<ProductCategories> getProductCategory();
 
     //Register
     @FormUrlEncoded
