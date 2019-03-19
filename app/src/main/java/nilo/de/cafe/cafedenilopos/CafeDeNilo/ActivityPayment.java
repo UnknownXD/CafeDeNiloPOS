@@ -1,5 +1,6 @@
 package nilo.de.cafe.cafedenilopos.CafeDeNilo;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -9,6 +10,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.suke.widget.SwitchButton;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -31,15 +34,19 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ActivityPayment extends AppCompatActivity {
-    Button btnCharge;
-    double payment = 0.00;
 
+
+    Button btnCharge;
+    public static Double discount = 0.00;
+    public static Double payment = 0.00;
     public TextView tvTotal;
     public TextView tvCash;
+    public SwitchButton switchButton;
     public String date2;
     double cash = 0.00;
 
     int TransID = 0;
+    double totalsum = 0.00;
     int QueueID = 0;
     int x ;
 
@@ -48,8 +55,9 @@ public class ActivityPayment extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_payment);
         btnCharge = findViewById(R.id.btnchargefinal);
-
+        switchButton = (SwitchButton) findViewById(R.id.switch_button);
         setTitle("Payment");
+        discount = 0.00;
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
@@ -58,6 +66,7 @@ public class ActivityPayment extends AppCompatActivity {
         tvCash = (TextView) findViewById(R.id.txtCash);
 
         payment = getIntent().getDoubleExtra("payment", 0.00);
+        totalsum = payment;
         tvTotal.setText("₱" + payment);
 
         btnCharge.setOnClickListener(new View.OnClickListener() {
@@ -80,6 +89,22 @@ public class ActivityPayment extends AppCompatActivity {
                     startActivity(intent);
                 }
 
+            }
+        });
+
+        switchButton.setOnCheckedChangeListener(new SwitchButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(SwitchButton view, boolean isChecked) {
+                discount = Double.parseDouble(String.format("%.2f", totalsum * 0.20));
+                if (isChecked) {
+                    payment = payment - discount;
+                    Toasty.success(ActivityPayment.this, "Success", Toasty.LENGTH_LONG,true).show();
+                } else {
+                    payment = payment + discount;
+                    discount = 0.00;
+
+                }
+                tvTotal.setText("₱"+String.format("%.2f", payment));
             }
         });
     }
@@ -253,13 +278,16 @@ public class ActivityPayment extends AppCompatActivity {
         APIService service = retrofit.create(APIService.class);
 
         //Defining the user object as we need to pass it with the call
-        Transaction transaction = new Transaction(date2, cash, total, MainActivity.email);
+        //Transaction transaction = new Transaction(date2, cash, total, MainActivity.email);
+        Transaction transaction = new Transaction(date2, cash, payment, MainActivity.email, Double.parseDouble(String.format("%.2f", PosActivity.sumunvatted * 0.12)), discount);
         //defining the call
         Call<Result> call = service.createTransaction(
                 transaction.getDate(),
                 transaction.getCash(),
                 transaction.getTotal_price(),
-                transaction.getEmail()
+                transaction.getEmail(),
+                transaction.getVat(),
+                transaction.getDiscount()
         );
 
         //calling the api

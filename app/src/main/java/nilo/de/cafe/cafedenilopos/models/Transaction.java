@@ -1,32 +1,33 @@
 package nilo.de.cafe.cafedenilopos.models;
 
-import java.util.Date;
-
 public class Transaction {
-    private int id;
-    private String email;
+    private double cash;
     private String date;
-    private  double total_price, cash;
+    private double discount;
+    private String email;
+    private int id;
+    private double total_price;
+    private double vat;
 
-    public Transaction( String date, double cash,double total_price, String email)
-    {
-
+    public Transaction(String date, double cash, double total_price, String email, double vat, double discount) {
         this.date = date;
         this.cash = cash;
         this.total_price = total_price;
+        this.vat = vat;
+        this.discount = discount;
         this.email = email;
     }
 
-    public Transaction( String date, double cash , double total_price)
-    {
+    public Transaction(String date, double cash, double total_price, double vat, double discount) {
         this.cash = cash;
         this.date = date;
         this.total_price = total_price;
-
+        this.vat = vat;
+        this.discount = discount;
     }
 
     public int getId() {
-        return id;
+        return this.id;
     }
 
     public void setId(int id) {
@@ -34,7 +35,7 @@ public class Transaction {
     }
 
     public String getEmail() {
-        return email;
+        return this.email;
     }
 
     public void setEmail(String email) {
@@ -46,11 +47,11 @@ public class Transaction {
     }
 
     public String getDate() {
-        return date;
+        return this.date;
     }
 
     public double getTotal_price() {
-        return total_price;
+        return this.total_price;
     }
 
     public void setTotal_price(double total_price) {
@@ -58,10 +59,26 @@ public class Transaction {
     }
 
     public double getCash() {
-        return cash;
+        return this.cash;
     }
 
     public void setCash(double cash) {
         this.cash = cash;
+    }
+
+    public double getDiscount() {
+        return this.discount;
+    }
+
+    public double getVat() {
+        return this.vat;
+    }
+
+    public void setDiscount(double discount) {
+        this.discount = discount;
+    }
+
+    public void setVat(double vat) {
+        this.vat = vat;
     }
 }

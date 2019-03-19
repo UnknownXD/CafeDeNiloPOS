@@ -72,11 +72,13 @@ public class PosActivity extends AppCompatActivity implements MainContract.MainV
     ArrayList<String> spinneradapter = new ArrayList<>();
 
     public int count = 0;
+    public static double sumunvatted = 0.00;
     public static double sum = 0.00;
-    public static ArrayList<String> listID = new ArrayList<>();
-    public static ArrayList<String> listName = new ArrayList<>();
-    public static ArrayList<String> listPrice = new ArrayList<>();
-    public static ArrayList<String> listQuantity = new ArrayList<>();
+    public static ArrayList<String> listID = new ArrayList();
+    public static ArrayList<String> listName = new ArrayList();
+    public static ArrayList<String> listPrice = new ArrayList();
+    public static ArrayList<String> listPriceunvatted = new ArrayList();
+    public static ArrayList<String> listQuantity = new ArrayList();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,6 +91,7 @@ public class PosActivity extends AppCompatActivity implements MainContract.MainV
         load();
 
         sum = 0.00;
+        sumunvatted = 0.00;
         listName.clear();
         listID.clear();
         listPrice.clear();
@@ -202,8 +205,10 @@ public class PosActivity extends AppCompatActivity implements MainContract.MainV
                                 count = Integer.parseInt(i) + count;
                                 ticketNum.setText(count + "");
                                 //Toasty.success(PosActivity.this, ((products.getPrice()* .12)+products.getPrice())+"", Toasty.LENGTH_LONG).show();
-
-                                sum = (Integer.parseInt(i) * (products.getPrice() * .12) + products.getPrice()) + sum;
+                                double toDouble = (Integer.parseInt(i) * ((products.getPrice() * .12) + products.getPrice())) + sum;
+                                double toDoubleUnvatted = (Integer.parseInt(i) *  products.getPrice()) + sumunvatted;
+                                sum = Double.parseDouble(String.format("%.2f", toDouble));
+                                sumunvatted = Double.parseDouble(String.format("%.2f", toDoubleUnvatted));
                                 btnPayment.setText("Charge ₱" + sum);
 
                                 if (listName.contains(products.getProduct_name())) {
@@ -211,13 +216,16 @@ public class PosActivity extends AppCompatActivity implements MainContract.MainV
                                     double x = ((products.getPrice() + (products.getPrice() * .12)) * (Integer.parseInt(i))) + Double.parseDouble(listPrice.get(y));
                                     int z = (Integer.parseInt(listQuantity.get(y))) + (Integer.parseInt(i));
 
-                                    listPrice.set(y, (x + ""));
+                                    listPrice.set(y, String.format("%.2f", x));
+
                                     listQuantity.set(y, (z + ""));
-                                } else {
+                                }
+
+                                else {
                                     listID.add(products.getId() + "");
                                     //Toast.makeText(context, model.getQuan()+"", Toast.LENGTH_SHORT).show();
                                     listName.add(products.getProduct_name());
-                                    listPrice.add((Integer.parseInt(i) * (products.getPrice() + (products.getPrice() * .12))) + "");
+                                    listPrice.add(String.format("%.2f",(Integer.parseInt(i) * (products.getPrice() + (products.getPrice() * .12)))) );
                                     listQuantity.add(i);
                                 }
                                 presenter.onRefreshButtonClick();
@@ -316,7 +324,7 @@ public class PosActivity extends AppCompatActivity implements MainContract.MainV
 
         APIService service = retrofit.create(APIService.class);
 
-        Call<ProductCategories> call = service.getProductCategory();
+        Call<ProductCategories> call = service.getproductscategory();
 
         call.enqueue(new Callback<ProductCategories>() {
             @Override

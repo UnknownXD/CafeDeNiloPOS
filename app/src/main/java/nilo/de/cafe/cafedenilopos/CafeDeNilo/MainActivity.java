@@ -45,9 +45,12 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         View headerView = navigationView.getHeaderView(0);
-        TextView navUsername = (TextView) headerView.findViewById(R.id.txtEmail);
+        TextView navUsername = (TextView) headerView.findViewById(R.id.txtUser);
+        TextView navEmail = (TextView) headerView.findViewById(R.id.txtEmail);
         email = SharedPrefManager.getInstance(this).getUser().getEmail();
-        navUsername.setText(email);
+        String name = SharedPrefManager.getInstance(this).getUser().getFirst_name()+", "+SharedPrefManager.getInstance(this).getUser().getLast_name() ;
+        navEmail.setText(email);
+        navUsername.setText(name.toUpperCase());
 
         ticketNum = (TextView) findViewById(R.id.ticketNum);
         btnTicket = (LinearLayout) findViewById(R.id.btnDan);

@@ -2,7 +2,10 @@ package nilo.de.cafe.cafedenilopos.PrinterPOS;
 
 
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -18,9 +21,13 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Calendar;
+import java.util.UUID;
 
+import es.dmoral.toasty.Toasty;
+import nilo.de.cafe.cafedenilopos.CafeDeNilo.ActivityPayment;
 import nilo.de.cafe.cafedenilopos.CafeDeNilo.MainActivity;
 import nilo.de.cafe.cafedenilopos.R;
+import nilo.de.cafe.cafedenilopos.helper.SharedPrefManager;
 import nilo.de.cafe.cafedenilopos.pos.PosActivity;
 
 public class PrintMainActivity extends Activity{
@@ -40,7 +47,12 @@ public class PrintMainActivity extends Activity{
         btnPrint = (Button)findViewById(R.id.btnPrint);
         btnBill = (Button)findViewById(R.id.btnBill);
 
-
+        device2();
+        if (btsocket == null) {
+            device2();
+        } else {
+            printBill();
+        }
         btnPrint.setOnClickListener(new OnClickListener() {
 
             @Override
@@ -80,6 +92,7 @@ public class PrintMainActivity extends Activity{
                     e.printStackTrace();
                 }
 
+                String name = SharedPrefManager.getInstance(this).getUser().getFirst_name()+", "+SharedPrefManager.getInstance(this).getUser().getLast_name() ;
                 printCustom("Cafe De Nilo",2,1);
                 printCustom(".",0,1);
                 printCustom("Taguig, 1630 Metro Manila, PAGASA",0,1);
@@ -89,14 +102,22 @@ public class PrintMainActivity extends Activity{
                 printText(leftRightAlign(dateTime[0], dateTime[1]));
                 printNewLine();
                 printCustom(new String(new char[40]).replace("\0", "."),0,1);
-
+                printText(leftRightAlign("Cashier:", name.toUpperCase()));
+                printNewLine();
+                printCustom(new String(new char[40]).replace("\0", "."),0,1);
                 for (int i = 0; i < PosActivity.listName.size(); i++) {
                     printText(leftRightAlign(PosActivity.listQuantity.get(i)+" X "+ PosActivity.listName.get(i) , PosActivity.listPrice.get(i)));
                     printNewLine();
                 }
 
                 printCustom(new String(new char[40]).replace("\0", "."),0,1);
-                printText(leftRightAlign("Total" , PosActivity.sum+""));
+                printText(leftRightAlign("Sub Total:" , PosActivity.sumunvatted+""));
+                printNewLine();
+                printText(leftRightAlign("Vat:" , (PosActivity.sumunvatted * .12)+""));
+                printNewLine();
+                printText(leftRightAlign("Discount:" , (ActivityPayment.discount)+""));
+                printNewLine();
+                printText(leftRightAlign("Total:" , (ActivityPayment.payment)+""));
                 printNewLine();
                 printNewLine();
                 printCustom("Thank you for coming & we look",0,1);
@@ -105,6 +126,7 @@ public class PrintMainActivity extends Activity{
                 printNewLine();
                 printNewLine();
                 printNewLine();
+
 
                 outputStream.flush();
             } catch (IOException e) {
@@ -297,10 +319,31 @@ public class PrintMainActivity extends Activity{
 
 
     private String[] getDateTime() {
-        final Calendar c = Calendar.getInstance();
-        String dateTime [] = new String[2];
-        dateTime[0] = c.get(Calendar.DAY_OF_MONTH) +"/"+ c.get(Calendar.MONTH) +"/"+ c.get(Calendar.YEAR);
-        dateTime[1] = c.get(Calendar.HOUR_OF_DAY) +":"+ c.get(Calendar.MINUTE);
+        Calendar c = Calendar.getInstance();
+        String[] dateTime = new String[2];
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(c.get(2) + 1);
+        stringBuilder.append("/");
+        stringBuilder.append(c.get(5));
+        stringBuilder.append("/");
+        stringBuilder.append(c.get(1));
+        dateTime[0] = stringBuilder.toString();
+        StringBuilder stringBuilder2;
+        if (c.get(9) == 0) {
+            stringBuilder2 = new StringBuilder();
+            stringBuilder2.append(c.get(10));
+            stringBuilder2.append(":");
+            stringBuilder2.append(c.get(12));
+            stringBuilder2.append("AM");
+            dateTime[1] = stringBuilder2.toString();
+        } else {
+            stringBuilder2 = new StringBuilder();
+            stringBuilder2.append(c.get(10));
+            stringBuilder2.append(":");
+            stringBuilder2.append(c.get(12));
+            stringBuilder2.append("PM");
+            dateTime[1] = stringBuilder2.toString();
+        }
         return dateTime;
     }
 
@@ -330,6 +373,48 @@ public class PrintMainActivity extends Activity{
 
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public void device2() {
+        try {
+            BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
+            if (btAdapter.isEnabled()) {
+                String btdevaddr = "66:12:A8:47:1F:5D";
+                if (btdevaddr != "?") {
+                    BluetoothDevice device = btAdapter.getRemoteDevice(btdevaddr);
+                    try {
+                        btsocket = device.createRfcommSocketToServiceRecord(UUID.fromString("00001101-0000-1000-8000-00805F9B34FB"));
+                    } catch (Exception e) {
+                        Log.e("shit1", "Error creating socket");
+                    }
+                    try {
+                        btsocket.connect();
+                        Log.e("", "Connected");
+                        return;
+                    } catch (IOException e2) {
+                        Log.e("shit1.5", e2.getMessage());
+                        StringBuilder stringBuilder = new StringBuilder();
+                        stringBuilder.append("shit2");
+                        stringBuilder.append(e2.getMessage());
+                        Toasty.error((Context) this, stringBuilder.toString(), 0, true).show();
+                        try {
+                            Log.e("", "trying fallback...");
+                            btsocket = (BluetoothSocket) device.getClass().getMethod("createRfcommSocket", new Class[]{Integer.TYPE}).invoke(device, new Object[]{Integer.valueOf(1)});
+                            btsocket.connect();
+                            Log.e("", "Connected");
+                            return;
+                        } catch (Exception e3) {
+                            Log.e("shit3.5", "error");
+                            Toasty.error((Context) this, (CharSequence) "Couldn't establish Bluetooth connection!", 0, true).show();
+                            return;
+                        }
+                    }
+                }
+                Log.e("shit4", "BT device not selected");
+            }
+        } catch (Exception e4) {
+            Toasty.error((Context) this, (CharSequence) "Couldn't establish Bluetooth connection!", 0, true).show();
         }
     }
 }
