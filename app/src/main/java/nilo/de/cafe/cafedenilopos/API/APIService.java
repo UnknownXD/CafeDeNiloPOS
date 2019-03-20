@@ -20,6 +20,12 @@ public interface APIService {
     Call<Result> createQueue(@Field("prepare_time") String str);
 
     @FormUrlEncoded
+    @POST("updateItemList")
+    Call<Result> updateItem(
+            @Field("field") String str
+    );
+
+    @FormUrlEncoded
     @POST("insertqueueorder")
     Call<Result> createQueueOrder(@Field("queue_number") int i, @Field("item_name") String str, @Field("quantity") double d);
 

@@ -23,6 +23,7 @@ import nilo.de.cafe.cafedenilopos.API.APIUrl;
 import nilo.de.cafe.cafedenilopos.PrinterPOS.PrintMainActivity;
 import nilo.de.cafe.cafedenilopos.R;
 import nilo.de.cafe.cafedenilopos.models.OrderedProducts;
+import nilo.de.cafe.cafedenilopos.models.Queue;
 import nilo.de.cafe.cafedenilopos.models.QueueOrder;
 import nilo.de.cafe.cafedenilopos.models.Result;
 import nilo.de.cafe.cafedenilopos.models.Transaction;
@@ -34,7 +35,6 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class ActivityPayment extends AppCompatActivity {
-
 
     Button btnCharge;
     public static Double discount = 0.00;
@@ -80,13 +80,13 @@ public class ActivityPayment extends AppCompatActivity {
 
                 else
                 {
-                    addTransactiion();
-
+                    update_item();
+                   addTransactiion();
                     addQueue();
-                    //addQueueOrderTransaction();
 
-                    Intent intent = new Intent(ActivityPayment.this, PrintMainActivity.class);
-                    startActivity(intent);
+                    //addQueueOrderTransaction();
+                    /*Intent intent = new Intent(ActivityPayment.this, PrintMainActivity.class);
+                    startActivity(intent);*/
                 }
 
             }
@@ -222,18 +222,57 @@ public class ActivityPayment extends AppCompatActivity {
 
         //Defining the user object as we need to pass it with the call
 
+        Queue queue = new Queue(PosActivity.finaldate);
         //defining the call
-        Call<Result> call = service.createQueue(null);
+        Call<Result> call = service.createQueue(
+                queue.getPrepare_time()
+        );
 
         //calling the api
         call.enqueue(new Callback<Result>() {
             @Override
             public void onResponse(Call<Result> call, Response<Result> response) {
-
                 //displaying the message from the response as toast
                 QueueID = Integer.valueOf(response.body().getQueueID());
                 addQueueOrderTransaction();
+                Toast.makeText(getApplicationContext(), "success - "+PosActivity.finaldate, Toast.LENGTH_LONG).show();
+            }
 
+            @Override
+            public void onFailure(Call<Result> call, Throwable t) {
+
+                Toast.makeText(getApplicationContext(), t.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+
+
+
+    //add Queue
+    private void update_item (){
+
+        //building retrofit object
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(APIUrl.BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        //Defining retrofit api service
+        APIService service = retrofit.create(APIService.class);
+
+        //Defining the user object as we need to pass it with the call
+
+        //defining the call
+        Call<Result> call = service.updateItem(
+                null
+        );
+
+        //calling the api
+        call.enqueue(new Callback<Result>() {
+            @Override
+            public void onResponse(Call<Result> call, Response<Result> response) {
+                //displaying the message from the response as toast
+                 Toast.makeText(getApplicationContext(), "successDan "+PosActivity.finaldate, Toast.LENGTH_LONG).show();
             }
 
             @Override

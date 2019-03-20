@@ -33,6 +33,10 @@ import com.afollestad.materialdialogs.MaterialDialog;
 import com.cepheuen.elegantnumberbutton.view.ElegantNumberButton;
 
 import org.angmarch.views.NiceSpinner;
+import org.joda.time.Period;
+import org.joda.time.PeriodType;
+import org.joda.time.format.PeriodFormatter;
+import org.joda.time.format.PeriodFormatterBuilder;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -45,9 +49,11 @@ import nilo.de.cafe.cafedenilopos.CafeDeNilo.ActivityPayment;
 import nilo.de.cafe.cafedenilopos.CafeDeNilo.ActivityTicket;
 import nilo.de.cafe.cafedenilopos.R;
 import nilo.de.cafe.cafedenilopos.adapter.OrderAdapter;
+import nilo.de.cafe.cafedenilopos.models.Item;
 import nilo.de.cafe.cafedenilopos.models.ProductCategories;
 import nilo.de.cafe.cafedenilopos.models.ProductCategory;
 import nilo.de.cafe.cafedenilopos.models.Products;
+import nilo.de.cafe.cafedenilopos.models.Result;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -79,7 +85,8 @@ public class PosActivity extends AppCompatActivity implements MainContract.MainV
     public static ArrayList<String> listPrice = new ArrayList();
     public static ArrayList<String> listPriceunvatted = new ArrayList();
     public static ArrayList<String> listQuantity = new ArrayList();
-
+    public Period period = Period.ZERO;
+    public static String finaldate;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -119,6 +126,7 @@ public class PosActivity extends AppCompatActivity implements MainContract.MainV
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(PosActivity.this, ActivityTicket.class);
+                intent.putExtra("payment", sum);
                 startActivity(intent);
             }
         });
@@ -145,11 +153,6 @@ public class PosActivity extends AppCompatActivity implements MainContract.MainV
         });
     }
 
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        this.finish();
-    }
 
     /**
      * Initializing Toolbar and RecyclerView
@@ -200,38 +203,88 @@ public class PosActivity extends AppCompatActivity implements MainContract.MainV
                                 //ElegantNum
                                 View MDView = dialog.getCustomView();
                                 ElegantNumberButton numberButton = MDView.findViewById(R.id.numbtn);
-                                String i = numberButton.getNumber();
+                                final int i = Integer.parseInt(numberButton.getNumber());
+                                int id = products.getId();
 
-                                count = Integer.parseInt(i) + count;
-                                ticketNum.setText(count + "");
-                                //Toasty.success(PosActivity.this, ((products.getPrice()* .12)+products.getPrice())+"", Toasty.LENGTH_LONG).show();
-                                double toDouble = (Integer.parseInt(i) * ((products.getPrice() * .12) + products.getPrice())) + sum;
-                                double toDoubleUnvatted = (Integer.parseInt(i) *  products.getPrice()) + sumunvatted;
-                                sum = Double.parseDouble(String.format("%.2f", toDouble));
-                                sumunvatted = Double.parseDouble(String.format("%.2f", toDoubleUnvatted));
-                                btnPayment.setText("Charge ₱" + sum);
 
-                                if (listName.contains(products.getProduct_name())) {
-                                    int y = listName.indexOf(products.getProduct_name());
-                                    double x = ((products.getPrice() + (products.getPrice() * .12)) * (Integer.parseInt(i))) + Double.parseDouble(listPrice.get(y));
-                                    int z = (Integer.parseInt(listQuantity.get(y))) + (Integer.parseInt(i));
+                                //Dan
+                                Retrofit retrofit = new Retrofit.Builder()
+                                        .baseUrl(APIUrl.BASE_URL)
+                                        .addConverterFactory(GsonConverterFactory.create())
+                                        .build();
 
-                                    listPrice.set(y, String.format("%.2f", x));
+                                //Defining retrofit api service
+                                APIService service = retrofit.create(APIService.class);
+                                //Defining the user object as we need to pass it with the call
+                                Item item = new Item(
+                                        id, i, id);
 
-                                    listQuantity.set(y, (z + ""));
-                                }
+                                //defining the call
+                                Call<Result> call = service.updateVTItems(
+                                        item.getProductId(), item.getQuantity(), item.getId()
+                                );
 
-                                else {
-                                    listID.add(products.getId() + "");
-                                    //Toast.makeText(context, model.getQuan()+"", Toast.LENGTH_SHORT).show();
-                                    listName.add(products.getProduct_name());
-                                    listPrice.add(String.format("%.2f",(Integer.parseInt(i) * (products.getPrice() + (products.getPrice() * .12)))) );
-                                    listQuantity.add(i);
-                                }
-                                presenter.onRefreshButtonClick();
-                                spinneradapter.clear();
-                                load();
-                                btnPayment.setEnabled(true);
+                                //calling the api
+                                call.enqueue(new Callback<Result>() {
+                                    @Override
+                                    public void onResponse(Call<Result> call, Response<Result> response) {
+                                        if (response.body().getMessage().equals("success")) {
+                                            count = i + count;
+                                            ticketNum.setText(count + "");
+                                            //Toasty.success(PosActivity.this, ((products.getPrice()* .12)+products.getPrice())+"", Toasty.LENGTH_LONG).show();
+                                            double toDouble = (i * ((products.getPrice() * .12) + products.getPrice())) + sum;
+                                            double toDoubleUnvatted = (i * products.getPrice()) + sumunvatted;
+                                            sum = Double.parseDouble(String.format("%.2f", toDouble));
+                                            sumunvatted = Double.parseDouble(String.format("%.2f", toDoubleUnvatted));
+                                            btnPayment.setText("Charge ₱" + sum);
+
+                                            if (listName.contains(products.getProduct_name())) {
+                                                int y = listName.indexOf(products.getProduct_name());
+                                                double x = ((products.getPrice() + (products.getPrice() * .12)) * (i)) + Double.parseDouble(listPrice.get(y));
+                                                int z = (Integer.parseInt(listQuantity.get(y))) + (i);
+
+                                                listPrice.set(y, String.format("%.2f", x));
+
+                                                listQuantity.set(y, (z + ""));
+                                            } else {
+                                                listID.add(products.getId() + "");
+                                                //Toast.makeText(context, model.getQuan()+"", Toast.LENGTH_SHORT).show();
+                                                listName.add(products.getProduct_name());
+                                                listPrice.add(String.format("%.2f", (i * (products.getPrice() + (products.getPrice() * .12)))));
+                                                listQuantity.add(i + "");
+                                            }
+
+                                            PeriodFormatter parser = new PeriodFormatterBuilder().appendHours().appendLiteral(":").appendMinutes().appendLiteral(":").appendSeconds().toFormatter();
+                                            PosActivity.this.period = PosActivity.this.period.plus(parser.parsePeriod(products.getPrepare_time()));
+                                            PeriodFormatter printer = new PeriodFormatterBuilder().printZeroAlways().minimumPrintedDigits(2).appendHours().appendLiteral(":").appendMinutes().appendLiteral(":").appendSeconds().toFormatter();
+                                            try {
+                                                StringBuilder stringBuilder3 = new StringBuilder();
+                                                stringBuilder3.append(printer.print(PosActivity.this.period.normalizedStandard(PeriodType.time())));
+                                                stringBuilder3.append("");
+                                                finaldate = stringBuilder3.toString();
+                                            } catch (Exception e) {
+                                                e.printStackTrace();
+                                            }
+                                            presenter.onRefreshButtonClick();
+                                            spinneradapter.clear();
+                                            load();
+                                            btnPayment.setEnabled(true);
+                                            Toasty.info(PosActivity.this, finaldate+"", Toasty.LENGTH_SHORT).show();
+                                            return;
+                                        }
+                                        Toasty.error(PosActivity.this, (CharSequence) "insufficient item in inventory", 1, true).show();
+                                    }
+
+                                    @Override
+                                    public void onFailure(Call<Result> call, Throwable t) {
+
+                                        Toasty.error(PosActivity.this, (CharSequence) "insufficient item in inventory", 1, true).show();
+                                    }
+                                });
+                                //dan
+
+
+
                             }
                         })
                         .onNeutral(new MaterialDialog.SingleButtonCallback() {
@@ -331,7 +384,7 @@ public class PosActivity extends AppCompatActivity implements MainContract.MainV
             public void onResponse(Call<ProductCategories> call, Response<ProductCategories> response) {
 
                 List<ProductCategory> users = response.body().getCategoryName();
-                ;
+
                 spinneradapter.add("All Products");
                              String[] user = new String[users.size()];
                              for(int i = 0; i <users.size(); i++)
@@ -351,4 +404,25 @@ public class PosActivity extends AppCompatActivity implements MainContract.MainV
             }
         });
     }
-}
+    public void onBackPressed() {
+        this.dialog = new MaterialDialog.Builder(this).title((CharSequence) "Quit").content((CharSequence) "Are you sure you want to cancel this order?").positiveText((CharSequence) "Yes").negativeText((CharSequence) "No").onPositive(new MaterialDialog.SingleButtonCallback() {
+            public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+                PosActivity.this.finish();
+            }
+        }).onNeutral(new MaterialDialog.SingleButtonCallback() {
+            public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+            }
+        }).onNegative(new MaterialDialog.SingleButtonCallback() {
+            public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+            }
+        }).onAny(new MaterialDialog.SingleButtonCallback() {
+            public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
+            }
+        }).show();
+    }
+
+    public void dan()
+    {
+
+    }
+    }

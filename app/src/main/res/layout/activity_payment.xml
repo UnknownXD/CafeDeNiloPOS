@@ -37,7 +37,7 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:text="COST"
-                    android:textSize="75sp"
+                    android:textSize="60sp"
                     android:textStyle="bold" />
 
             </RelativeLayout>

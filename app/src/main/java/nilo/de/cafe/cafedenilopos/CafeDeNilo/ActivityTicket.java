@@ -25,13 +25,16 @@ public class  ActivityTicket extends AppCompatActivity {
     static SwipeMenuListView listView;
     public static Button btnPayment;
     FrameLayout btnPayment2;
+    double sum;
     TextView txt;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ticket);
+        sum = 0.00;
         setTitle("Ticket");
+        btnPayment = (Button) findViewById(R.id.btnCharge2a);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
@@ -59,6 +62,8 @@ public class  ActivityTicket extends AppCompatActivity {
         };
 
         CustomAdapter listAdapter = new CustomAdapter();
+        this.sum = getIntent().getDoubleExtra("payment", 0.00);
+        btnPayment.setText("Charge ₱"+ sum);
         listView.setMenuCreator(creator);
         listView.setAdapter(listAdapter);
 
@@ -68,6 +73,7 @@ public class  ActivityTicket extends AppCompatActivity {
             public void onClick(View v)
             {
                 Intent intent = new Intent(ActivityTicket.this, ActivityPayment.class);
+                intent.putExtra("payment", ActivityTicket.this.sum);
                 startActivity(intent);
             }
         });
@@ -76,6 +82,7 @@ public class  ActivityTicket extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(ActivityTicket.this, ActivityPayment.class);
+                intent.putExtra("payment", ActivityTicket.this.sum);
                 startActivity(intent);
             }
         });
