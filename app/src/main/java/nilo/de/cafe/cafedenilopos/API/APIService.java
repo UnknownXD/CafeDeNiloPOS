@@ -13,7 +13,12 @@ import retrofit2.http.Path;
 public interface APIService {
     @FormUrlEncoded
     @POST("ordertransaction")
-    Call<Result> createOrderTrans(@Field("transaction_id") int i, @Field("product_name") String str, @Field("price") double d, @Field("quantity") double d2, @Field("created_at") String str2);
+    Call<Result> createOrderTrans(
+            @Field("transaction_id") int i,
+            @Field("product_name") String str,
+            @Field("price") double d,
+            @Field("quantity") double d2,
+            @Field("created_at") String str2);
 
     @FormUrlEncoded
     @POST("insertqueue")
@@ -56,7 +61,12 @@ public interface APIService {
 
     @FormUrlEncoded
     @POST("update/{productId}")
-    Call<Result> updateVTItems(@Path("productId") int i, @Field("quantity") int i2, @Field("productId") int i3);
+    Call<Result> updateVTItems(
+            @Path("productId") int i,
+            @Field("quantity") int i2,
+            @Field("productId") int i3,
+            @Field("date") String str
+    );
 
     @FormUrlEncoded
     @POST("login")

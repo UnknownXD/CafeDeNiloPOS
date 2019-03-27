@@ -38,7 +38,10 @@ import org.joda.time.PeriodType;
 import org.joda.time.format.PeriodFormatter;
 import org.joda.time.format.PeriodFormatterBuilder;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -70,6 +73,7 @@ public class PosActivity extends AppCompatActivity implements MainContract.MainV
     public static LinearLayout btnTicket;
     private MainContract.presenter presenter;
 
+    public String date2;
     OrderAdapter adapter;
     //Adapter
     double payment = 0.00;
@@ -96,7 +100,9 @@ public class PosActivity extends AppCompatActivity implements MainContract.MainV
         initProgressBar();
         spinneradapter.clear();
         load();
-
+        Date date = Calendar.getInstance().getTime();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        date2 = dateFormat.format(date);
         sum = 0.00;
         sumunvatted = 0.00;
         listName.clear();
@@ -217,11 +223,11 @@ public class PosActivity extends AppCompatActivity implements MainContract.MainV
                                 APIService service = retrofit.create(APIService.class);
                                 //Defining the user object as we need to pass it with the call
                                 Item item = new Item(
-                                        id, i, id);
+                                        id, i, id, date2);
 
                                 //defining the call
                                 Call<Result> call = service.updateVTItems(
-                                        item.getProductId(), item.getQuantity(), item.getId()
+                                        item.getProductId(), item.getQuantity(), item.getId(),item.getDate()
                                 );
 
                                 //calling the api
@@ -269,7 +275,7 @@ public class PosActivity extends AppCompatActivity implements MainContract.MainV
                                             spinneradapter.clear();
                                             load();
                                             btnPayment.setEnabled(true);
-                                            Toasty.info(PosActivity.this, finaldate+"", Toasty.LENGTH_SHORT).show();
+                                            //Toasty.info(PosActivity.this, finaldate+"", Toasty.LENGTH_SHORT).show();
                                             return;
                                         }
                                         Toasty.error(PosActivity.this, (CharSequence) "insufficient item in inventory", 1, true).show();
@@ -278,7 +284,7 @@ public class PosActivity extends AppCompatActivity implements MainContract.MainV
                                     @Override
                                     public void onFailure(Call<Result> call, Throwable t) {
 
-                                        Toasty.error(PosActivity.this, (CharSequence) "insufficient item in inventory", 1, true).show();
+                                        Toasty.error(PosActivity.this, (CharSequence) t.getMessage(), 1, true).show();
                                     }
                                 });
                                 //dan

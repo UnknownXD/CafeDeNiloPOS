@@ -85,8 +85,8 @@ public class ActivityPayment extends AppCompatActivity {
                     addQueue();
 
                     //addQueueOrderTransaction();
-                    /*Intent intent = new Intent(ActivityPayment.this, PrintMainActivity.class);
-                    startActivity(intent);*/
+                    Intent intent = new Intent(ActivityPayment.this, PrintMainActivity.class);
+                    startActivity(intent);
                 }
 
             }
@@ -122,13 +122,20 @@ public class ActivityPayment extends AppCompatActivity {
 
         //Defining retrofit api service
         APIService service = retrofit.create(APIService.class);
+        Double value = 0.00;
 
         //Defining the user object as we need to pass it with the call
-            Toast.makeText(ActivityPayment.this, TransID+"", Toast.LENGTH_SHORT).show();
+        if(switchButton.isChecked())
+        {
+            value = ( Double.parseDouble(PosActivity.listPrice.get(x)) - (Double.parseDouble(PosActivity.listPrice.get(x))*.20));
+        }
+        else
+            value = Double.parseDouble(PosActivity.listPrice.get(x));
+
         OrderedProducts transaction = new OrderedProducts(
                 TransID,
                 PosActivity.listName.get(x),
-                Double.parseDouble(PosActivity.listPrice.get(x)),
+                value,
                 Double.parseDouble(PosActivity.listQuantity.get(x)),
                 date2);
 
